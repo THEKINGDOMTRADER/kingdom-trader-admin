@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Kingdom Trader · Admin</title>
+<link rel="icon" type="image/jpeg" href="logo.jpg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0C121C;--panel:#141B29;--panel-2:#182036;--line:#232C40;--text:#E9EAEE;--dim:#9AA3B5;--gold:#C6A153;--gold-soft:#8B7237;--buy:#2BAE72;--sell:#C1494A}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font:15px/1.5 Inter,sans-serif;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(12,18,28,.80),rgba(12,18,28,.93)),url(bg.jpg) center/cover no-repeat}
+.wrap{max-width:1100px;margin:0 auto;padding:0 18px}
+nav{position:sticky;top:0;z-index:5;background:rgba(12,18,28,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px;gap:10px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:600}.logo img{width:38px;height:38px;border-radius:8px}
+.eyebrow{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+h2{font-size:24px;margin:22px 0 4px}h3{font-size:16px;margin:22px 0 8px}
+.note{color:var(--dim);font-size:13px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+.tab{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:999px;cursor:pointer;font:500 14px Inter;min-height:42px}
+.tab.on{background:var(--gold);color:#0C121C;border-color:var(--gold)}
+.tab b{background:var(--sell);color:#fff;border-radius:99px;padding:1px 7px;font-size:11px;margin-left:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:10px 0}
+.row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.pill{font:600 11px 'JetBrains Mono',monospace;padding:3px 10px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line)}
+.ok{color:var(--buy);border-color:var(--buy)}.bad{color:var(--sell);border-color:var(--sell)}.mid{color:var(--gold);border-color:var(--gold-soft)}
+input,select,textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font:15px Inter;min-height:44px}
+label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.btn{background:var(--gold);color:#0C121C;border:0;border-radius:10px;padding:11px 18px;font:600 14px Inter;cursor:pointer;min-height:44px;margin:8px 8px 0 0}
+.btn.g{background:transparent;color:var(--text);border:1px solid var(--line)}.btn.r{background:var(--sell);color:#fff}.btn.s{min-height:38px;padding:8px 14px}
+.btn:disabled{opacity:.4}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}.num{text-align:right}
+.sx{overflow-x:auto}.tier{border:1px dashed var(--gold-soft);border-radius:10px;padding:12px;margin:10px 0}
+.msg{font-size:13px;margin-top:8px;min-height:18px}
+#login{max-width:380px;margin:12vh auto}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<nav><div class="wrap"><div class="logo"><img src="logo.jpg" alt="Kingdom Trader"><span>Kingdom Trader <span class="eyebrow">Admin</span></span></div><button class="btn g s" id="out" hidden style="margin:0">Log out</button></div></nav>
+
+<div class="wrap" id="login">
+  <img src="logo.jpg" alt="Kingdom Trader" style="width:96px;height:96px;border-radius:16px;display:block;margin:0 auto 6px">
+  <h2>Owner login</h2><p class="note">Only the owner email can open this site.</p>
+  <label>Email</label><input id="em" type="email" autocomplete="username">
+  <label>Password</label><input id="pw" type="password" autocomplete="current-password">
+  <button class="btn" id="go">Log in</button><div class="msg" id="lm"></div>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <h2>Control room</h2><p class="note" id="clock"></p>
+  <div class="tabs" id="tabs"></div>
+
+  <section id="v-orders"><input id="q" placeholder="Search ticket ID, order ID or name"><div id="orders"></div></section>
+  <section id="v-licenses" hidden><div id="lics"></div></section>
+  <section id="v-wallet" hidden><h3>Wallet requests waiting</h3><p class="note">Real deposits, real withdrawals and bot payments are automatic and never appear here. This list is for demo requests and anything stuck.</p><div id="wal"></div></section>
+  <section id="v-plans" hidden>
+    <h3>Plan contributions waiting</h3><div id="pend"></div>
+    <h3>Daily groups (cohorts)</h3><div class="sx" id="coh"></div>
+    <h3>Settle a group</h3><div id="calc" class="card"><p class="note">Pick a matured group above, then enter the total you hold after trading.</p></div>
+    <h3>Plan withdrawals waiting</h3><div id="wds"></div>
+  </section>
+  <section id="v-products" hidden>
+    <div class="card"><div class="eyebrow">Add or update a product</div><p class="note">Using a name that already exists updates it.</p>
+      <div class="g2"><div><label>Product name</label><input id="pn"></div><div><label>Pair / tag</label><input id="pp" placeholder="e.g. EURUSD"></div></div>
+      <div class="g3"><div><label>Category</label><select id="pc"><option>PC</option><option>Mobile</option><option>Combo</option></select></div><div><label>Picture (link or file name)</label><input id="pi"></div><div><label>Show on site?</label><select id="pa"><option value="1">Yes</option><option value="0">No</option></select></div></div>
+      <label>Platforms</label><div class="row" style="justify-content:flex-start;gap:18px"><label style="margin:0"><input type="checkbox" class="plat" value="MT5" checked style="width:auto;min-height:0"> MT5</label><label style="margin:0"><input type="checkbox" class="plat" value="TradingView" style="width:auto;min-height:0"> TradingView</label></div>
+      <label>Short description</label><input id="pd"><label>Strengths</label><input id="ps">
+      <div class="g2"><div><label>Win rate %</label><input id="pw2" type="number"></div><div><label>Key advantages</label><input id="pv"></div></div>
+      <h3>Tiers (what each level gets)</h3><div id="tiers"></div>
+      <button class="btn g s" id="addTier">+ Add tier</button><br>
+      <button class="btn" id="saveProd">Save product</button><div class="msg" id="pm"></div></div>
+    <div id="prods"></div>
+  </section>
+  <section id="v-settings" hidden><div class="card"><div class="eyebrow">Exchange rate</div><label>1 USD = ? UGX</label><input id="fx" type="number"><button class="btn" id="saveFx">Save rate</button><div class="msg" id="fm"></div></div></section>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,collection,doc,getDoc,setDoc,updateDoc,onSnapshot,writeBatch,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyBTMWE--vpIlQPS081VEv1RoaGCDbvIZhM",authDomain:"the-kingdom-trader-app.firebaseapp.com",projectId:"the-kingdom-trader-app",storageBucket:"the-kingdom-trader-app.firebasestorage.app",messagingSenderId:"590959238217",appId:"1:590959238217:web:3fc9f54aec6ccaa14ab398"});
+const auth=getAuth(app),db=getFirestore(app),ADMIN='thekingdomtrader7@gmail.com';
+const $=i=>document.getElementById(i),esc=t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>(n<0?'−':'')+'$'+(Math.round(Math.abs(n)*100)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const H=3600000,D=86400000,EAT=3*H,snap=s=>s.docs.map(d=>({...d.data(),id:d.id}));
+const ms=t=>t&&t.toMillis?t.toMillis():(typeof t==='number'?t:0),fd=t=>t?new Date(t).toLocaleDateString('en-GB',{timeZone:'Africa/Kampala',day:'numeric',month:'short',year:'numeric'}):'—';
+const say=(id,t,ok)=>{const e=$(id);e.textContent=t;e.style.color=ok?'var(--buy)':'var(--sell)'};
+const S={req:[],lic:[],led:[],con:[],wd:[],prod:[],calc:null,subs:[]};
+const PLANS={w2:{n:'2-week plan',d:14},m1:{n:'1-month plan',d:30},m3:{n:'3-month plan',d:90},m6:{n:'6-month plan',d:180}};
+const TABS=[['orders','Orders'],['licenses','Licenses'],['wallet','Wallet'],['plans','Plans'],['products','Products'],['settings','Settings']];
+function tabs(){const w=S.led.filter(e=>e.status==='pending').length,p=S.con.filter(c=>c.status==='pending').length+S.wd.filter(x=>x.status==='requested').length,b={wallet:w,plans:p};
+  $('tabs').innerHTML=TABS.map(([k,n])=>`<button class="tab ${cur===k?'on':''}" data-t="${k}">${n}${b[k]?`<b>${b[k]}</b>`:''}</button>`).join('')}
+let cur='orders';
+$('tabs').onclick=e=>{const t=e.target.closest('[data-t]');if(!t)return;cur=t.dataset.t;TABS.forEach(([k])=>$('v-'+k).hidden=k!==cur);tabs()};
+
+/* ---------- ORDERS ---------- */
+function orders(){const q=$('q').value.trim().toLowerCase(),L=S.req.filter(r=>!q||[r.ticketId,r.orderId,r.name,r.title].join(' ').toLowerCase().includes(q)).sort((a,b)=>ms(b.createdAt)-ms(a.createdAt));
+  $('orders').innerHTML=L.length?L.map(r=>`<div class="card" data-id="${r.id}"><div class="row"><b>${esc(r.title||r.service)}</b><span class="pill ${r.status==='Completed'?'ok':'mid'}">${esc(r.status||'Received')}</span></div>
+  <div class="note mono">Ticket ${esc(r.ticketId||'—')} · Order ${esc(r.orderId||'—')} · ${fd(ms(r.createdAt))}</div>
+  <div class="note">${esc(r.name||'')} · ${esc(r.contact||'')} · ${esc(r.platform||'')} ${r.tier?'· '+esc(r.tier):''} ${r.amountDue?'· '+money(r.amountDue):''}</div>
+  <div class="g2"><div><label>Status</label><select class="st">${['Received','Awaiting Payment','In Progress','Completed'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Delivery link</label><input class="dl" value="${esc(r.deliveryLink||'')}"></div></div>
+  <label>Note to client</label><textarea class="nt" rows="2">${esc(r.note||'')}</textarea><button class="btn s sv">Save</button><span class="note"></span></div>`).join(''):'<p class="note">No orders yet.</p>'}
+$('q').oninput=orders;
+$('orders').onclick=async e=>{const b=e.target.closest('.sv');if(!b)return;const c=b.closest('.card');try{await updateDoc(doc(db,'requests',c.dataset.id),{status:c.querySelector('.st').value,deliveryLink:c.querySelector('.dl').value.trim(),note:c.querySelector('.nt').value});b.nextSibling.textContent=' Saved ✓'}catch(x){b.nextSibling.textContent=' '+x.message}};
+
+/* ---------- LICENSES ---------- */
+function lics(){$('lics').innerHTML=S.lic.length?S.lic.sort((a,b)=>ms(b.createdAt)-ms(a.createdAt)).map(l=>`<div class="card"><div class="row"><b>${esc(l.product)}${l.tier?' · '+esc(l.tier):''}</b><span class="pill ${l.status==='Active'?'ok':'bad'}">${esc(l.status)}</span></div>
+  <div class="note mono">${esc(l.licenseKey||'no key')} · Ticket ${esc(l.ticketId||'—')}</div>
+  <div class="note">${esc(l.platform)} · ${esc((l.accounts||[]).join(', ')||l.mt5AccountNumber||l.tradingViewUsername||'no account yet')} · up to ${l.maxSlots||'?'} accounts · ${l.instruments||'?'} instruments · VPS ${l.vps?'yes':'no'} · ${l.expiryDate?'expires '+esc(l.expiryDate):'lifetime'}</div>
+  <button class="btn s ${l.status==='Active'?'r':''}" data-lic="${l.id}" data-to="${l.status==='Active'?'Suspended':'Active'}">${l.status==='Active'?'Suspend':'Activate'}</button></div>`).join(''):'<p class="note">No licences yet. They are created automatically when a customer pays.</p>'}
+$('lics').onclick=async e=>{const b=e.target.closest('[data-lic]');if(b)await updateDoc(doc(db,'licenses',b.dataset.lic),{status:b.dataset.to})};
+
+/* ---------- WALLET ---------- */
+const bal=(uid,mode)=>S.led.filter(e=>e.uid===uid&&e.status==='completed'&&String(e.mode||'demo').toLowerCase()===mode).reduce((a,e)=>a+e.amount,0);
+function wal(){const L=S.led.filter(e=>e.status==='pending').sort((a,b)=>b.createdAt-a.createdAt);
+  $('wal').innerHTML=L.length?`<div class="sx"><table><tr><th>Date</th><th>Member</th><th>Type</th><th>Mode</th><th class="num">Amount</th><th></th></tr>${L.map(e=>`<tr><td>${fd(e.createdAt)}</td><td>${esc(e.name||e.email)}</td><td>${esc(e.type)}</td><td>${esc(e.mode||'demo')}</td><td class="num">${money(e.amount)}</td><td><button class="btn s" data-ok="${e.id}">Confirm</button><button class="btn s g" data-no="${e.id}">Reject</button></td></tr>`).join('')}</table></div>`:'<p class="note">Nothing waiting.</p>'}
+$('wal').onclick=async e=>{const o=e.target.closest('[data-ok]'),n=e.target.closest('[data-no]');
+  if(o){const x=S.led.find(z=>z.id===o.dataset.ok);if(x.amount<0&&bal(x.uid,String(x.mode||'demo').toLowerCase())<-x.amount-.005)return alert('This member does not have enough completed balance.');await updateDoc(doc(db,'ledger',x.id),{status:'completed',completedAt:Date.now(),confirmedBy:'admin'})}
+  if(n&&confirm('Reject this request?'))await updateDoc(doc(db,'ledger',n.dataset.no),{status:'rejected',completedAt:Date.now()})};
+
+/* ---------- PLANS ---------- */
+const winFor=t=>Math.floor((t+EAT)/D)*D-EAT;
+function dates(pk,ws,open){const w=open?D:3*D;return{id:pk+'-'+ws+(open?'o':''),plan:pk,ws,winEnd:ws+w-1,startAt:ws+w,mat:ws+w+PLANS[pk].d*D,c:[]}}
+function cohorts(){const m={};S.con.forEach(x=>{if(!x.plan||!x.winStart)return;const id=x.plan+'-'+x.winStart+(x.open?'o':'');(m[id]=m[id]||dates(x.plan,x.winStart,x.open)).c.push(x)});return Object.values(m)}
+const act=c=>c.c.filter(x=>x.status==='active'),sum=l=>l.reduce((a,m)=>a+m.amount,0);
+function stat(c){const n=Date.now();if(!act(c).length&&c.c.some(x=>x.status==='settled'||x.status==='closed'))return'Settled';return n<c.startAt?'Starting':n<c.mat?'Running':'Matured'}
+function calc(l,fin){const st=sum(l),pr=Math.max(0,fin-st),tp=l.reduce((a,m)=>a+m.amount*m.t,0),f=st>0?Math.min(1,fin/st):0,g=tp>0?Math.min(1,pr/tp):0;let paid=0;
+  const rows=l.map(m=>{const pay=Math.round((m.amount*f+m.amount*m.t*g)*100)/100;paid+=pay;const need=m.amount*(1+m.t);return{id:m.id,name:m.name||m.email,amount:m.amount,pay,out:pay>=need-.005?'ok':(pay>=m.amount-.005?'mid':'bad')}});
+  return{rows,st,fee:Math.max(0,Math.round((fin-paid)*100)/100)}}
+function plans(){
+  const pe=S.con.filter(c=>c.status==='pending');
+  $('pend').innerHTML=pe.length?`<div class="sx"><table><tr><th>Member</th><th>Plan</th><th class="num">Amount</th><th>Paid by</th><th></th></tr>${pe.map(x=>`<tr><td>${esc(x.name||x.email)}</td><td>${PLANS[x.plan]?PLANS[x.plan].n:esc(x.plan)}<br><span class="note">group ${fd(x.winStart)}</span></td><td class="num">${money(x.amount)}</td><td>${esc(x.method||'')}</td><td><button class="btn s" data-cok="${x.id}">Confirm</button><button class="btn s g" data-cno="${x.id}">Reject</button></td></tr>`).join('')}</table></div>`:'<p class="note">Nothing waiting.</p>';
+  const cs=cohorts().sort((a,b)=>b.ws-a.ws);
+  $('coh').innerHTML=cs.length?`<table><tr><th>Plan</th><th>Joined</th><th>Matures</th><th class="num">Members</th><th class="num">Total</th><th>Status</th><th></th></tr>${cs.map(c=>{const s=stat(c);return`<tr><td>${PLANS[c.plan].n}</td><td>${fd(c.ws)}</td><td>${fd(c.mat)}</td><td class="num">${act(c).length}</td><td class="num">${money(sum(act(c)))}</td><td><span class="pill ${s==='Matured'?'bad':s==='Settled'?'ok':'mid'}">${s}</span></td><td>${act(c).length?`<button class="btn s g" data-calc="${c.id}">Settle</button>`:''}</td></tr>`}).join('')}</table>`:'<p class="note">No groups yet.</p>';
+  const c=S.calc&&cohorts().find(x=>x.id===S.calc);
+  if(c&&act(c).length){const keep=$('fin')?$('fin').value:'';$('calc').innerHTML=`<b>${PLANS[c.plan].n} · group ${fd(c.ws)}</b> <span class="note">(${stat(c)}${stat(c)==='Matured'?'':' · matures '+fd(c.mat)})</span><label>Total amount you hold after trading (USD)</label><input id="fin" type="number" step="0.01" value="${esc(keep)}"><div id="cout"></div>`;$('fin').oninput=cout;cout()}
+  const w=S.wd.filter(x=>x.status==='requested');
+  $('wds').innerHTML=w.length?w.map(x=>`<div class="card row"><span>${esc(x.name||x.email||'')} · ${money(x.amount)}</span><button class="btn s" data-rel="${x.id}">Mark as released</button></div>`).join(''):'<p class="note">None waiting.</p>'}
+function cout(){const c=cohorts().find(x=>x.id===S.calc),f=parseFloat($('fin').value);if(!c)return;if(!(f>=0)){$('cout').innerHTML='';return}
+  const r=calc(act(c),f),can=stat(c)==='Matured';
+  $('cout').innerHTML=`<div class="sx"><table><tr><th>Member</th><th class="num">Put in</th><th class="num">Payout</th></tr>${r.rows.map(x=>`<tr><td>${esc(x.name)}</td><td class="num">${money(x.amount)}</td><td class="num"><span class="pill ${x.out}">${money(x.pay)}</span></td></tr>`).join('')}</table></div><p class="note">Total put in ${money(r.st)} · our fee above targets ${money(r.fee)}</p><button class="btn" id="settle" ${can?'':'disabled'}>Record settlement and pay members' wallets</button>${can?'':'<p class="note">Available once the group has matured.</p>'}`}
+document.addEventListener('click',async e=>{const t=e.target;let q;
+  if((q=t.closest('[data-calc]'))){S.calc=q.dataset.calc;plans();$('calc').scrollIntoView({behavior:'smooth'});return}
+  if((q=t.closest('[data-cok]'))){const x=S.con.find(z=>z.id===q.dataset.cok),b=writeBatch(db);
+    if(x.fundedBy==='wallet'){const le=S.led.find(l=>l.refId===x.id&&l.status==='pending');if(le){if(bal(x.uid,String(le.mode||'demo').toLowerCase())<x.amount-.005)return alert('Not enough completed wallet balance.');b.update(doc(db,'ledger',le.id),{status:'completed',completedAt:Date.now(),confirmedBy:'admin'})}}
+    b.update(doc(db,'contributions',x.id),{status:'active',confirmedAt:Date.now()});await b.commit();return}
+  if((q=t.closest('[data-cno]'))){if(!confirm('Reject and remove this contribution?'))return;const b=writeBatch(db);b.delete(doc(db,'contributions',q.dataset.cno));S.led.filter(l=>l.refId===q.dataset.cno&&l.status==='pending').forEach(l=>b.update(doc(db,'ledger',l.id),{status:'rejected',completedAt:Date.now()}));await b.commit();return}
+  if((q=t.closest('[data-rel]'))){await updateDoc(doc(db,'withdrawals',q.dataset.rel),{status:'released',releasedAt:Date.now()});return}
+  if(t.closest('#settle')){const c=cohorts().find(x=>x.id===S.calc),f=parseFloat($('fin').value);if(!c||!(f>=0)||!confirm('Pay out this group now? This cannot be undone.'))return;
+    const r=calc(act(c),f),by={};act(c).forEach(a=>by[a.id]=a);const b=writeBatch(db);
+    r.rows.forEach(x=>{const m=by[x.id];b.update(doc(db,'contributions',x.id),{status:'closed',payout:x.pay,out:x.out,settlement:{final:f,fee:r.fee,at:Date.now()}});
+      if(m.uid&&String(m.uid).indexOf('manual:')!==0&&x.pay>0)b.set(doc(collection(db,'ledger')),{uid:m.uid,name:m.name||'',email:m.email||'',type:'plan_payout',mode:String(m.mode||'demo').toLowerCase(),amount:x.pay,status:'completed',refKind:'contribution',refId:x.id,service:'Investments',method:'Plan payout',note:PLANS[c.plan].n,createdBy:'admin',createdAt:Date.now(),completedAt:Date.now()})});
+    await b.commit();S.calc=null;$('calc').innerHTML='<p class="note">Settled ✓ Members were paid into their wallets.</p>'}});
+
+/* ---------- PRODUCTS (with tiers) ---------- */
+const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+function tierRow(t={}){const d=document.createElement('div');d.className='tier';d.innerHTML=`<div class="g3"><div><label>Tier name</label><input class="tn" value="${esc(t.name||'')}" placeholder="e.g. Lite"></div><div><label>Buy price ($)</label><input class="tb" type="number" value="${t.buyPrice||''}"></div><div><label>Rent price per month ($)</label><input class="tr" type="number" value="${t.rentPrice||''}"></div></div>
+  <div class="g3"><div><label>MT5 accounts allowed</label><input class="ta" type="number" value="${t.mt5Accounts||''}"></div><div><label>Instruments allowed</label><input class="ti" type="number" value="${t.instruments||''}"></div><div><label>VPS included?</label><select class="tv"><option value="0">No</option><option value="1" ${t.vps?'selected':''}>Yes</option></select></div></div>
+  <label>Google Drive download link for this tier</label><input class="tl" value="${esc(t.link||'')}" placeholder="https://drive.google.com/..."><button class="btn s g rm" type="button">Remove tier</button>`;$('tiers').appendChild(d)}
+$('addTier').onclick=()=>tierRow();$('tiers').onclick=e=>{if(e.target.closest('.rm'))e.target.closest('.tier').remove()};
+['Lite','Standard','Pro'].forEach(n=>tierRow({name:n}));
+$('saveProd').onclick=async()=>{const name=$('pn').value.trim(),pl=[...document.querySelectorAll('.plat:checked')].map(c=>c.value);
+  if(!name||!pl.length||!$('pd').value.trim())return say('pm','Add a name, a description and at least one platform.');
+  const tr=[...document.querySelectorAll('.tier')].map(r=>({name:r.querySelector('.tn').value.trim(),buyPrice:+r.querySelector('.tb').value,rentPrice:+r.querySelector('.tr').value,mt5Accounts:+r.querySelector('.ta').value,instruments:+r.querySelector('.ti').value,vps:r.querySelector('.tv').value==='1',link:r.querySelector('.tl').value.trim()}));
+  if(!tr.length)return say('pm','Add at least one tier.');
+  for(const t of tr)if(!t.name||!(t.buyPrice>0)||!(t.rentPrice>0)||!(t.mt5Accounts>0)||!t.link)return say('pm','Every tier needs a name, both prices, the number of MT5 accounts and a download link.');
+  const keys=tr.map(t=>slug(t.name));if(new Set(keys).size!==keys.length)return say('pm','Two tiers have the same name.');
+  const tiers=tr.map((t,i)=>({key:keys[i],name:t.name,buyPrice:t.buyPrice,rentPrice:t.rentPrice,mt5Accounts:t.mt5Accounts,instruments:t.instruments,vps:t.vps})),tl={};tr.forEach((t,i)=>tl[keys[i]]=t.link);
+  try{await setDoc(doc(db,'products',name),{pair:$('pp').value.trim(),category:$('pc').value,imageUrl:$('pi').value.trim(),platforms:pl,active:$('pa').value==='1',description:$('pd').value.trim(),strengths:$('ps').value.trim(),winRate:$('pw2').value?+$('pw2').value:null,advantages:$('pv').value.trim(),tiers,buyPrice:Math.min(...tiers.map(t=>t.buyPrice)),rentPrice:Math.min(...tiers.map(t=>t.rentPrice)),downloadAvail:Object.fromEntries(pl.map(p=>[p,true])),updatedAt:serverTimestamp()});
+    await setDoc(doc(db,'productFiles',name),{tierLinks:tl,driveLink:Object.values(tl)[0],downloadLinks:Object.fromEntries(pl.map(p=>[p,Object.values(tl)[0]])),updatedAt:serverTimestamp()});
+    say('pm','Saved ✓ Live on the site now.',1)}catch(x){say('pm',x.message)}};
+function prods(){$('prods').innerHTML=S.prod.map(p=>`<div class="card row"><div><b>${esc(p.id)}</b> <span class="pill ${p.active!==false?'ok':'bad'}">${p.active!==false?'Visible':'Hidden'}</span><div class="note">${(p.tiers||[]).map(t=>esc(t.name)+' $'+t.buyPrice+' / $'+t.rentPrice+' mo').join(' · ')||'no tiers yet (old product)'}</div></div><div><button class="btn s g" data-edit="${esc(p.id)}">Edit</button><button class="btn s g" data-hide="${esc(p.id)}">${p.active!==false?'Hide':'Show'}</button></div></div>`).join('')}
+$('prods').onclick=async e=>{const ed=e.target.closest('[data-edit]'),hd=e.target.closest('[data-hide]');
+  if(hd){const p=S.prod.find(x=>x.id===hd.dataset.hide);await updateDoc(doc(db,'products',p.id),{active:p.active===false})}
+  if(ed){const p=S.prod.find(x=>x.id===ed.dataset.edit);let L={};try{const f=await getDoc(doc(db,'productFiles',p.id));if(f.exists())L=f.data().tierLinks||{}}catch(x){}
+    $('pn').value=p.id;$('pp').value=p.pair||'';$('pc').value=p.category||'PC';$('pi').value=p.imageUrl||'';$('pa').value=p.active===false?'0':'1';$('pd').value=p.description||'';$('ps').value=p.strengths||'';$('pw2').value=p.winRate||'';$('pv').value=p.advantages||'';
+    document.querySelectorAll('.plat').forEach(c=>c.checked=(p.platforms||[]).includes(c.value));$('tiers').innerHTML='';(p.tiers||[{name:'Standard',buyPrice:p.buyPrice,rentPrice:p.rentPrice,mt5Accounts:6}]).forEach(t=>tierRow({...t,link:L[t.key]||''}));window.scrollTo({top:$('v-products').offsetTop,behavior:'smooth'})}};
+
+/* ---------- SETTINGS ---------- */
+$('saveFx').onclick=async()=>{try{await setDoc(doc(db,'settings','exchangeRate'),{usdToUgx:+$('fx').value,updatedAt:serverTimestamp()});say('fm','Saved ✓',1)}catch(x){say('fm',x.message)}};
+
+/* ---------- LOGIN AND LIVE DATA ---------- */
+$('go').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('em').value.trim(),$('pw').value)}catch(x){say('lm','Wrong email or password.')}};
+$('out').onclick=()=>signOut(auth);
+const all=()=>{tabs();orders();lics();wal();plans();prods()};
+onAuthStateChanged(auth,u=>{S.subs.forEach(f=>f());S.subs=[];const ok=!!u&&u.email===ADMIN;$('login').hidden=ok;$('app').hidden=!ok;$('out').hidden=!u;
+  if(u&&!ok){say('lm','This email is not the owner. Logged out.');signOut(auth);return}
+  if(!ok)return;
+  const w=(n,k)=>S.subs.push(onSnapshot(collection(db,n),s=>{S[k]=snap(s);all()},e=>console.error(n,e)));
+  w('requests','req');w('licenses','lic');w('ledger','led');w('contributions','con');w('withdrawals','wd');w('products','prod');
+  getDoc(doc(db,'settings','exchangeRate')).then(s=>{if(s.exists())$('fx').value=s.data().usdToUgx||''}).catch(()=>{});
+  setInterval(()=>{$('clock').textContent=new Date().toLocaleString('en-GB',{timeZone:'Africa/Kampala'})+' EAT'},1000)});
+</script>
+</body>
+</html>
