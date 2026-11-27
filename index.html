@@ -8,7 +8,7 @@
 <link rel="icon" type="image/jpeg" href="logo.jpg">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0C121C;--panel:#141B29;--panel-2:#182036;--line:#232C40;--text:#E9EAEE;--dim:#9AA3B5;--gold:#D5D9E2;--gold-soft:#8A91A3;--buy:#2BAE72;--sell:#C1494A}
+:root{--bg:#0C121C;--panel:#141B29;--panel-2:#182036;--line:#232C40;--text:#E9EAEE;--dim:#9AA3B5;--gold:#C6A153;--gold-soft:#8B7237;--buy:#2BAE72;--sell:#C1494A}
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--text);font:15px/1.5 Inter,sans-serif;overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(12,18,28,.80),rgba(12,18,28,.93)),url(bg.jpg) center/cover no-repeat}
@@ -57,9 +57,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
   <h2>Control room</h2><p class="note" id="clock"></p>
   <div class="tabs" id="tabs"></div>
 
-  <section id="v-orders"><div class="g3"><input id="q" placeholder="Search ticket, order ID or name"><select id="so"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="tid">Ticket ID</option><option value="name">Member name</option><option value="amt">Biggest amount</option></select><select id="sf"><option value="">All statuses</option><option>Received</option><option>Awaiting Payment</option><option>In Progress</option><option>Completed</option></select></div><div class="row"><span class="note" id="oc"></span><button class="btn g s" id="xo">Export to Excel (CSV)</button></div><div id="orders"></div></section>
-  <section id="v-members" hidden><div class="row"><input id="mq" placeholder="Search name, email or country" style="max-width:320px"><button class="btn g s" id="xm">Export to Excel (CSV)</button></div><p class="note" id="mc"></p><div class="sx" id="mem"></div></section>
-  <section id="v-money" hidden><p class="note">Real money only. Demo money is never counted here.</p><div class="g3" id="mcards"></div><h3>Real money moves</h3><div class="row"><select id="mt" style="max-width:220px"><option value="">All types</option><option value="deposit">Money in (deposits)</option><option value="withdrawal">Money out (withdrawals)</option><option value="purchase">Bot sales</option><option value="plan_join">Into plans</option><option value="plan_payout">Plan payouts</option></select><button class="btn g s" id="xl">Export to Excel (CSV)</button></div><div class="sx" id="mrows"></div></section>
+  <section id="v-orders"><input id="q" placeholder="Search ticket ID, order ID or name"><div id="orders"></div></section>
   <section id="v-licenses" hidden><div id="lics"></div></section>
   <section id="v-wallet" hidden><h3>Wallet requests waiting</h3><p class="note">Real deposits, real withdrawals and bot payments are automatic and never appear here. This list is for demo requests and anything stuck.</p><div id="wal"></div></section>
   <section id="v-plans" hidden>
@@ -80,7 +78,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
       <button class="btn" id="saveProd">Save product</button><div class="msg" id="pm"></div></div>
     <div id="prods"></div>
   </section>
-  <section id="v-settings" hidden><div class="card"><div class="eyebrow">Back up, then clear test data</div><p class="note">Step 1 downloads everything as a file. Step 2 unlocks only after the backup. Real wallet entries are never deleted.</p><button class="btn" id="bk">1. Download backup</button><label>Only delete items created before this date (leave empty for all)</label><input id="dcut" type="date"><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="d1" checked style="width:auto;min-height:0"> Orders and licences</label><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="d2" checked style="width:auto;min-height:0"> Demo wallet entries</label><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="d3" style="width:auto;min-height:0"> Also orders paid from the Real wallet</label><label>Type DELETE to confirm</label><input id="dc"><button class="btn r" id="del" disabled>2. Delete now</button><div class="msg" id="dm"></div></div><div class="card"><div class="eyebrow">Exchange rate</div><label>1 USD = ? UGX</label><input id="fx" type="number"><button class="btn" id="saveFx">Save rate</button><div class="msg" id="fm"></div></div></section>
+  <section id="v-settings" hidden><div class="card"><div class="eyebrow">Exchange rate</div><label>1 USD = ? UGX</label><input id="fx" type="number"><button class="btn" id="saveFx">Save rate</button><div class="msg" id="fm"></div></div></section>
 </div>
 
 <script type="module">
@@ -94,22 +92,22 @@ const money=n=>(n<0?'−':'')+'$'+(Math.round(Math.abs(n)*100)/100).toLocaleStri
 const H=3600000,D=86400000,EAT=3*H,snap=s=>s.docs.map(d=>({...d.data(),id:d.id}));
 const ms=t=>t&&t.toMillis?t.toMillis():(typeof t==='number'?t:0),fd=t=>t?new Date(t).toLocaleDateString('en-GB',{timeZone:'Africa/Kampala',day:'numeric',month:'short',year:'numeric'}):'—';
 const say=(id,t,ok)=>{const e=$(id);e.textContent=t;e.style.color=ok?'var(--buy)':'var(--sell)'};
-const S={usr:[],req:[],lic:[],led:[],con:[],wd:[],prod:[],calc:null,subs:[]};
+const S={req:[],lic:[],led:[],con:[],wd:[],prod:[],calc:null,subs:[]};
 const PLANS={w2:{n:'2-week plan',d:14},m1:{n:'1-month plan',d:30},m3:{n:'3-month plan',d:90},m6:{n:'6-month plan',d:180}};
-const TABS=[['orders','Orders'],['licenses','Licenses'],['wallet','Wallet'],['plans','Plans'],['products','Products'],['members','Members'],['money','Money'],['settings','Settings']];
+const TABS=[['orders','Orders'],['licenses','Licenses'],['wallet','Wallet'],['plans','Plans'],['products','Products'],['settings','Settings']];
 function tabs(){const w=S.led.filter(e=>e.status==='pending').length,p=S.con.filter(c=>c.status==='pending').length+S.wd.filter(x=>x.status==='requested').length,b={wallet:w,plans:p};
   $('tabs').innerHTML=TABS.map(([k,n])=>`<button class="tab ${cur===k?'on':''}" data-t="${k}">${n}${b[k]?`<b>${b[k]}</b>`:''}</button>`).join('')}
 let cur='orders';
 $('tabs').onclick=e=>{const t=e.target.closest('[data-t]');if(!t)return;cur=t.dataset.t;TABS.forEach(([k])=>$('v-'+k).hidden=k!==cur);tabs()};
 
 /* ---------- ORDERS ---------- */
-function orders(){const q=$('q').value.trim().toLowerCase(),sf=$('sf').value,so=$('so').value,L=S.req.filter(r=>(!q||[r.ticketId,r.orderId,r.name,r.title].join(' ').toLowerCase().includes(q))&&(!sf||r.status===sf)).sort((a,b)=>so==='old'?ms(a.createdAt)-ms(b.createdAt):so==='tid'?String(a.ticketId||'').localeCompare(b.ticketId||''):so==='name'?String(a.name||'').localeCompare(b.name||''):so==='amt'?(b.amountDue||0)-(a.amountDue||0):ms(b.createdAt)-ms(a.createdAt));$('oc').textContent=L.length+' of '+S.req.length+' orders';
+function orders(){const q=$('q').value.trim().toLowerCase(),L=S.req.filter(r=>!q||[r.ticketId,r.orderId,r.name,r.title].join(' ').toLowerCase().includes(q)).sort((a,b)=>ms(b.createdAt)-ms(a.createdAt));
   $('orders').innerHTML=L.length?L.map(r=>`<div class="card" data-id="${r.id}"><div class="row"><b>${esc(r.title||r.service)}</b><span class="pill ${r.status==='Completed'?'ok':'mid'}">${esc(r.status||'Received')}</span></div>
   <div class="note mono">Ticket ${esc(r.ticketId||'—')} · Order ${esc(r.orderId||'—')} · ${fd(ms(r.createdAt))}</div>
   <div class="note">${esc(r.name||'')} · ${esc(r.contact||'')} · ${esc(r.platform||'')} ${r.tier?'· '+esc(r.tier):''} ${r.amountDue?'· '+money(r.amountDue):''}</div>
   <div class="g2"><div><label>Status</label><select class="st">${['Received','Awaiting Payment','In Progress','Completed'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></div><div><label>Delivery link</label><input class="dl" value="${esc(r.deliveryLink||'')}"></div></div>
   <label>Note to client</label><textarea class="nt" rows="2">${esc(r.note||'')}</textarea><button class="btn s sv">Save</button><span class="note"></span></div>`).join(''):'<p class="note">No orders yet.</p>'}
-$('q').oninput=$('so').onchange=$('sf').onchange=orders;
+$('q').oninput=orders;
 $('orders').onclick=async e=>{const b=e.target.closest('.sv');if(!b)return;const c=b.closest('.card');try{await updateDoc(doc(db,'requests',c.dataset.id),{status:c.querySelector('.st').value,deliveryLink:c.querySelector('.dl').value.trim(),note:c.querySelector('.nt').value});b.nextSibling.textContent=' Saved ✓'}catch(x){b.nextSibling.textContent=' '+x.message}};
 
 /* ---------- LICENSES ---------- */
@@ -165,9 +163,9 @@ document.addEventListener('click',async e=>{const t=e.target;let q;
 const slug=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 function tierRow(t={}){const d=document.createElement('div');d.className='tier';d.innerHTML=`<div class="g3"><div><label>Tier name</label><input class="tn" value="${esc(t.name||'')}" placeholder="e.g. Lite"></div><div><label>Buy price ($)</label><input class="tb" type="number" value="${t.buyPrice||''}"></div><div><label>Rent price per month ($)</label><input class="tr" type="number" value="${t.rentPrice||''}"></div></div>
   <div class="g3"><div><label>MT5 accounts allowed</label><input class="ta" type="number" value="${t.mt5Accounts||''}"></div><div><label>Instruments allowed</label><input class="ti" type="number" value="${t.instruments||''}"></div><div><label>VPS included?</label><select class="tv"><option value="0">No</option><option value="1" ${t.vps?'selected':''}>Yes</option></select></div></div>
-  <label>Tier picture (file name in the site folder, e.g. tier-lite.jpg)</label><input class="tp" value="${esc(t.imageUrl||'')}"><img src="${esc(t.imageUrl||'')}" alt="" style="width:64px;height:64px;border-radius:10px;object-fit:cover;margin:6px 0" onerror="this.style.display='none'"><label>Google Drive download link for this tier</label><input class="tl" value="${esc(t.link||'')}" placeholder="https://drive.google.com/..."><button class="btn s g rm" type="button">Remove tier</button>`;$('tiers').appendChild(d)}
+  <label>Picture for this tier (link or file name)</label><input class="tp" value="${esc(t.imageUrl||'')}" placeholder="e.g. lite.jpg or https://..."><label>Google Drive download link for this tier</label><input class="tl" value="${esc(t.link||'')}" placeholder="https://drive.google.com/..."><button class="btn s g rm" type="button">Remove tier</button>`;$('tiers').appendChild(d)}
 $('addTier').onclick=()=>tierRow();$('tiers').onclick=e=>{if(e.target.closest('.rm'))e.target.closest('.tier').remove()};
-[['Lite','tier-lite.jpg'],['Standard','tier-standard.jpg'],['Pro','tier-pro.jpg']].forEach(n=>tierRow({name:n[0],imageUrl:n[1]}));
+['Lite','Standard','Pro'].forEach(n=>tierRow({name:n}));
 $('saveProd').onclick=async()=>{const name=$('pn').value.trim(),pl=[...document.querySelectorAll('.plat:checked')].map(c=>c.value);
   if(!name||!pl.length||!$('pd').value.trim())return say('pm','Add a name, a description and at least one platform.');
   const tr=[...document.querySelectorAll('.tier')].map(r=>({name:r.querySelector('.tn').value.trim(),buyPrice:+r.querySelector('.tb').value,rentPrice:+r.querySelector('.tr').value,mt5Accounts:+r.querySelector('.ta').value,instruments:+r.querySelector('.ti').value,vps:r.querySelector('.tv').value==='1',imageUrl:r.querySelector('.tp').value.trim(),link:r.querySelector('.tl').value.trim()}));
@@ -188,49 +186,15 @@ $('prods').onclick=async e=>{const ed=e.target.closest('[data-edit]'),hd=e.targe
 /* ---------- SETTINGS ---------- */
 $('saveFx').onclick=async()=>{try{await setDoc(doc(db,'settings','exchangeRate'),{usdToUgx:+$('fx').value,updatedAt:serverTimestamp()});say('fm','Saved ✓',1)}catch(x){say('fm',x.message)}};
 
-
-/* ---------- MEMBERS, MONEY, EXPORT, BACKUP ---------- */
-const real=e=>String(e.mode||'').toLowerCase()==='real';
-const csv=(n,rows)=>{const t=rows.map(r=>r.map(v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"').join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download=n+'-'+new Date().toISOString().slice(0,10)+'.csv';a.click()};
-const dt=t=>t?new Date(t).toISOString().slice(0,16).replace('T',' '):'';
-/*MEM*/
-function mem(){const m={},g=u=>{if(!u||String(u).indexOf('manual:')===0)return null;return m[u]=m[u]||{uid:u,name:'',email:'',country:'',joined:0,orders:0,lic:0,bal:0,plan:0,spent:0,svc:new Set()}};
-  S.usr.forEach(u=>{const x=g(u.id);x.country=u.country||'';x.joined=u.createdAt||0});
-  S.req.forEach(r=>{const x=g(r.uid);if(!x)return;x.name=x.name||r.name||'';x.email=x.email||(String(r.contact||'').includes('@')?r.contact:'');x.orders++;if(r.service)x.svc.add(r.service)});
-  S.lic.forEach(l=>{const x=g(l.uid);if(x&&l.status==='Active')x.lic++});
-  S.led.forEach(e=>{const x=g(e.uid);if(!x)return;x.name=x.name||e.name||'';x.email=x.email||e.email||'';if(!real(e)||e.status!=='completed')return;x.bal+=e.amount;if(e.type==='purchase')x.spent-=e.amount});
-  S.con.forEach(c=>{const x=g(c.uid);if(x&&c.status==='active'&&real(c))x.plan+=c.amount;if(x&&c.plan)x.svc.add('Trade-for-me plan')});
-  return Object.values(m)}
-function tot(){const R=S.led.filter(e=>real(e)&&e.status==='completed'),s=t=>R.filter(e=>e.type===t).reduce((a,e)=>a+e.amount,0),seen={};let fees=0;
-  S.con.filter(c=>c.status==='closed'&&real(c)&&c.settlement).forEach(c=>{const k=c.plan+c.winStart+(c.open?'o':'');if(!seen[k]){seen[k]=1;fees+=c.settlement.fee||0}});
-  return{dep:s('deposit'),wd:-s('withdrawal'),sales:-s('purchase'),wallets:R.reduce((a,e)=>a+e.amount,0),held:S.con.filter(c=>c.status==='active'&&real(c)).reduce((a,c)=>a+c.amount,0),fees,wait:-S.led.filter(e=>real(e)&&(e.status==='pending'||e.status==='processing')&&e.type==='withdrawal').reduce((a,e)=>a+e.amount,0)}}
-/*END*/
-function members(){const q=$('mq').value.trim().toLowerCase(),L=mem().filter(x=>!q||[x.name,x.email,x.country].join(' ').toLowerCase().includes(q)).sort((a,b)=>b.joined-a.joined);$('mc').textContent=L.length+' members';
-  $('mem').innerHTML=`<table><tr><th>Member</th><th>Country</th><th>Joined</th><th class="num">Orders</th><th class="num">Active licences</th><th class="num">Real wallet</th><th class="num">In plans</th><th class="num">Spent on bots</th><th>Services</th></tr>${L.map(x=>`<tr><td>${esc(x.name||'(no name yet)')}<br><span class="note">${esc(x.email)}</span></td><td>${esc(x.country)}</td><td>${x.joined?fd(x.joined):'—'}</td><td class="num">${x.orders}</td><td class="num">${x.lic}</td><td class="num">${money(x.bal)}</td><td class="num">${money(x.plan)}</td><td class="num">${money(x.spent)}</td><td>${esc([...x.svc].join(', '))}</td></tr>`).join('')}</table>`}
-function cash(){const t=tot(),c=(l,v,n)=>`<div class="card"><div class="note">${l}</div><div style="font-size:22px;font-weight:600">${money(v)}</div><div class="note">${n}</div></div>`;
-  $('mcards').innerHTML=c('Money received',t.dep,'real deposits')+c('Money paid out',t.wd,'real withdrawals sent')+c('Cash we hold',t.dep-t.wd,'received minus paid out')+c('Owed to members',t.wallets,'sitting in their wallets')+c('Plan money held',t.held,'members\' active plans, not ours')+c('Bot sales (ours)',t.sales,'paid from wallets')+c('Plan fees (ours)',t.fees,'from settled groups')+c('Waiting to go out',t.wait,'withdrawals not finished');
-  const ty=$('mt').value,L=S.led.filter(e=>real(e)&&e.status==='completed'&&(!ty||e.type===ty)).sort((a,b)=>b.createdAt-a.createdAt);
-  $('mrows').innerHTML=`<table><tr><th>Date</th><th>Member</th><th>Type</th><th>Note</th><th class="num">Amount</th></tr>${L.slice(0,150).map(e=>`<tr><td>${fd(e.createdAt)}</td><td>${esc(e.name||e.email)}</td><td>${esc(e.type)}</td><td>${esc(e.note||e.method||'')}</td><td class="num" style="color:${e.amount<0?'var(--sell)':'var(--buy)'}">${money(e.amount)}</td></tr>`).join('')}</table>${L.length>150?'<p class="note">Showing the latest 150. Export for everything.</p>':''}`}
-$('mq').oninput=members;$('mt').onchange=cash;
-$('xo').onclick=()=>csv('orders',[['Ticket','Order','Date','Member','Contact','Item','Service','Platform','Tier','Amount USD','Status','Paid from']].concat(S.req.map(r=>[r.ticketId,r.orderId,dt(ms(r.createdAt)),r.name,r.contact,r.title,r.service,r.platform,r.tier,r.amountDue,r.status,r.paidFrom])));
-$('xm').onclick=()=>csv('members',[['Name','Email','Country','Joined','Orders','Active licences','Real wallet','In plans','Spent on bots','Services','UID']].concat(mem().map(x=>[x.name,x.email,x.country,dt(x.joined),x.orders,x.lic,x.bal,x.plan,x.spent,[...x.svc].join('; '),x.uid])));
-$('xl').onclick=()=>csv('real-money',[['Date','Member','Email','Type','Status','Amount USD','Method','Note']].concat(S.led.filter(real).sort((a,b)=>b.createdAt-a.createdAt).map(e=>[dt(e.createdAt),e.name,e.email,e.type,e.status,e.amount,e.method,e.note])));
-$('bk').onclick=()=>{const d={savedAt:new Date().toISOString(),requests:S.req,licenses:S.lic,ledger:S.led,contributions:S.con,withdrawals:S.wd,users:S.usr},a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,1)],{type:'application/json'}));a.download='kingdom-trader-backup-'+d.savedAt.slice(0,10)+'.json';a.click();$('del').disabled=false;say('dm','Backup downloaded. Check it saved, then you can delete.',1)};
-$('del').onclick=async()=>{if($('dc').value!=='DELETE')return say('dm','Type DELETE first.');
-  const cut=$('dcut').value?new Date($('dcut').value).getTime():Infinity,old=t=>(typeof t==='number'?t:ms(t))<cut,L=[];
-  if($('d1').checked){S.req.filter(r=>old(r.createdAt)&&($('d3').checked||r.paidFrom!=='wallet')).forEach(r=>L.push(['requests',r.id]));S.lic.filter(l=>old(l.createdAt)&&($('d3').checked||!S.req.some(r=>r.ticketId===l.ticketId&&r.paidFrom==='wallet'))).forEach(l=>L.push(['licenses',l.id]))}
-  if($('d2').checked)S.led.filter(e=>!real(e)&&old(e.createdAt)).forEach(e=>L.push(['ledger',e.id]));
-  if(!L.length)return say('dm','Nothing matches.');if(!confirm('Delete '+L.length+' records? This cannot be undone (you have the backup).'))return;
-  try{for(let i=0;i<L.length;i+=400){const b=writeBatch(db);L.slice(i,i+400).forEach(([c,id])=>b.delete(doc(db,c,id)));await b.commit()}say('dm','Deleted '+L.length+' records ✓',1);$('dc').value=''}catch(x){say('dm',x.message)}};
 /* ---------- LOGIN AND LIVE DATA ---------- */
 $('go').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('em').value.trim(),$('pw').value)}catch(x){say('lm','Wrong email or password.')}};
 $('out').onclick=()=>signOut(auth);
-const all=()=>{tabs();orders();lics();wal();plans();prods();members();cash()};
+const all=()=>{tabs();orders();lics();wal();plans();prods()};
 onAuthStateChanged(auth,u=>{S.subs.forEach(f=>f());S.subs=[];const ok=!!u&&u.email===ADMIN;$('login').hidden=ok;$('app').hidden=!ok;$('out').hidden=!u;
   if(u&&!ok){say('lm','This email is not the owner. Logged out.');signOut(auth);return}
   if(!ok)return;
   const w=(n,k)=>S.subs.push(onSnapshot(collection(db,n),s=>{S[k]=snap(s);all()},e=>console.error(n,e)));
-  w('requests','req');w('licenses','lic');w('ledger','led');w('contributions','con');w('withdrawals','wd');w('products','prod');w('users','usr');
+  w('requests','req');w('licenses','lic');w('ledger','led');w('contributions','con');w('withdrawals','wd');w('products','prod');
   getDoc(doc(db,'settings','exchangeRate')).then(s=>{if(s.exists())$('fx').value=s.data().usdToUgx||''}).catch(()=>{});
   setInterval(()=>{$('clock').textContent=new Date().toLocaleString('en-GB',{timeZone:'Africa/Kampala'})+' EAT'},1000)});
 </script>
