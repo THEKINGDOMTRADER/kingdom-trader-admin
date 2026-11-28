@@ -10,7 +10,8 @@
 <style>
 :root{--bg:#0A0A0B;--panel:#131315;--panel-2:#1A1A1D;--line:#2B2B30;--text:#F0F0F2;--dim:#A0A3AB;--gold:#D5D8DD;--gold-soft:#80848C;--buy:#2BAE72;--sell:#C1494A}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font:15px/1.5 Inter,sans-serif;overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font:15px/1.5 Inter,sans-serif;overflow-x:hidden;overflow-x:clip}
+html{scroll-padding-top:130px}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:linear-gradient(rgba(8,8,9,.80),rgba(8,8,9,.93)),url(bg.jpg) center/cover no-repeat}
 .wrap{max-width:1100px;margin:0 auto;padding:0 18px}
 nav{position:sticky;top:0;z-index:5;background:rgba(8,8,9,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
@@ -19,14 +20,22 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;height:6
 .eyebrow{font:600 11px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
 h2{font-size:24px;margin:22px 0 4px}h3{font-size:16px;margin:22px 0 8px}
 .note{color:var(--dim);font-size:13px}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
-.tab{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:999px;cursor:pointer;font:500 14px Inter;min-height:42px}
-.tab.on{background:var(--gold);color:#0A0A0B;border-color:var(--gold)}
+.tabs{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:sticky;top:64px;z-index:4;margin:0 -18px 14px;padding:10px 18px;background:rgba(8,8,9,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.tabs::-webkit-scrollbar{display:none}
+.tab[data-t=orders]{--c:#5AA9FF}.tab[data-t=licenses]{--c:#B28DFF}.tab[data-t=wallet]{--c:#F2B84B}.tab[data-t=plans]{--c:#3DD6C6}.tab[data-t=products]{--c:#FF8A5B}.tab[data-t=settings]{--c:#A0A3AB}
+#v-orders{--c:#5AA9FF}#v-licenses{--c:#B28DFF}#v-wallet{--c:#F2B84B}#v-plans{--c:#3DD6C6}#v-products{--c:#FF8A5B}#v-settings{--c:#A0A3AB}
+section .card{border-top:2px solid var(--c,var(--line))}
+section h3,section .eyebrow{color:var(--c,var(--gold))}
+.tab{flex:0 0 auto;display:inline-flex;align-items:center;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:999px;cursor:pointer;font:500 14px Inter;min-height:42px;white-space:nowrap}
+.tab:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c,var(--gold));margin-right:8px}
+.tab:hover{border-color:var(--c,var(--gold))}
+.tab.on{background:var(--buy);color:#06140D;border-color:var(--buy);font-weight:600}
+.tab.on:before{background:#06140D}
 .tab b{background:var(--sell);color:#fff;border-radius:99px;padding:1px 7px;font-size:11px;margin-left:6px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin:10px 0}
 .row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
 .pill{font:600 11px 'JetBrains Mono',monospace;padding:3px 10px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line)}
-.ok{color:var(--buy);border-color:var(--buy)}.bad{color:var(--sell);border-color:var(--sell)}.mid{color:var(--gold);border-color:var(--gold-soft)}
+.ok{color:var(--buy);border-color:var(--buy)}.bad{color:var(--sell);border-color:var(--sell)}.mid{color:#F2B84B;border-color:#8A6A1F}
 input,select,textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:11px 12px;font:15px Inter;min-height:44px}
 label{display:block;font-size:12px;color:var(--dim);margin:10px 0 4px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
@@ -40,6 +49,23 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;p
 #login{max-width:380px;margin:12vh auto}
 .mono{font-family:'JetBrains Mono',monospace;font-size:12px}
 [hidden]{display:none!important}
+
+/* --- tab row stays fixed while scrolling, with a soft shadow --- */
+.tabs{box-shadow:0 8px 18px -10px rgba(0,0,0,.8)}
+/* --- action colours --- */
+[data-ok],[data-cok],#saveProd,#saveFx,.btn.sv{background:var(--buy);color:#04140C}
+[data-no],[data-cno]{color:var(--sell);border-color:var(--sell)}
+[data-calc]{color:#3DD6C6;border-color:#3DD6C6}
+[data-edit]{color:#5AA9FF;border-color:#5AA9FF}
+[data-rel]{background:#F2B84B;color:#1A1200}
+.btn.rm{color:var(--sell);border-color:var(--sell)}
+/* --- each section keeps its own colour identity --- */
+section .card{background:linear-gradient(180deg,color-mix(in srgb,var(--c,#888) 9%,var(--panel)),var(--panel) 55%);box-shadow:0 0 0 1px color-mix(in srgb,var(--c,#888) 14%,transparent)}
+section th{color:var(--c,var(--dim));font-weight:600}
+section input:focus,section select:focus,section textarea:focus{border-color:var(--c,var(--gold));outline:0;box-shadow:0 0 0 2px color-mix(in srgb,var(--c,#888) 25%,transparent)}
+section .tier{border-color:var(--c,var(--gold-soft))}
+section .pill{border-color:color-mix(in srgb,var(--c,#888) 45%,var(--line))}
+.tab.on{box-shadow:0 0 14px rgba(43,174,114,.35)}
 </style>
 </head>
 <body>
@@ -96,7 +122,10 @@ const S={req:[],lic:[],led:[],con:[],wd:[],prod:[],calc:null,subs:[]};
 const PLANS={w2:{n:'2-week plan',d:14},m1:{n:'1-month plan',d:30},m3:{n:'3-month plan',d:90},m6:{n:'6-month plan',d:180}};
 const TABS=[['orders','Orders'],['licenses','Licenses'],['wallet','Wallet'],['plans','Plans'],['products','Products'],['settings','Settings']];
 function tabs(){const w=S.led.filter(e=>e.status==='pending').length,p=realCon().filter(c=>c.status==='pending').length+S.wd.filter(x=>x.status==='requested').length,b={wallet:w,plans:p};
-  $('tabs').innerHTML=TABS.map(([k,n])=>`<button class="tab ${cur===k?'on':''}" data-t="${k}">${n}${b[k]?`<b>${b[k]}</b>`:''}</button>`).join('')}
+  const tb=$('tabs'),prev=tb.scrollLeft;
+  tb.innerHTML=TABS.map(([k,n])=>`<button class="tab ${cur===k?'on':''}" data-t="${k}">${n}${b[k]?`<b>${b[k]}</b>`:''}</button>`).join('');
+  tb.scrollLeft=prev;
+  const on=tb.querySelector('.on');if(on){const r=on.getBoundingClientRect(),t=tb.getBoundingClientRect();if(r.left<t.left||r.right>t.right)tb.scrollLeft+=(r.left+r.right)/2-(t.left+t.right)/2}}
 let cur='orders';
 $('tabs').onclick=e=>{const t=e.target.closest('[data-t]');if(!t)return;cur=t.dataset.t;TABS.forEach(([k])=>$('v-'+k).hidden=k!==cur);tabs()};
 
